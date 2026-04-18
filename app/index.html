@@ -165,6 +165,26 @@
       .kpi-grid { grid-template-columns: repeat(2,1fr); }
       .section-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Modal ── */
+    .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:480px;max-width:90vw; box-shadow:0 24px 64px rgba(0,0,0,0.5); animation:modalIn 0.3s ease; }
+    @keyframes modalIn { from{transform:translateY(-20px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .modal-title { font-size:20px;font-weight:800;margin-bottom:6px; }
+    .modal-sub { font-size:13px;color:var(--muted);margin-bottom:24px; }
+    .form-group { margin-bottom:18px; }
+    .form-label { font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:8px; }
+    .form-input, .form-select { width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border 0.2s; }
+    .form-input:focus, .form-select:focus { border-color:var(--accent); }
+    .form-select option { background:var(--surface2); }
+    .modal-footer { display:flex;gap:12px;margin-top:24px; }
+    .credit-info { background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px;font-size:13px;display:none; }
+    .credit-info.show { display:block; }
+    .ci-row { display:flex;justify-content:space-between;margin-bottom:6px; }
+    .ci-label { color:var(--muted); }
+    .ci-val { font-weight:600; }
+    .ci-warn { color:var(--red);font-weight:700;margin-top:8px;font-size:12px; }
   </style>
 </head>
 <body>
@@ -318,6 +338,7 @@
           <div class="page-title">Sales Orders</div>
           <div class="page-subtitle">All O2C sales orders with credit check status</div>
         </div>
+        <button class="btn btn-primary" onclick="openNewOrder()">+ New Order</button>
       </div>
       <div class="card full-card">
         <div class="table-wrap">
@@ -327,6 +348,43 @@
             </tr></thead>
             <tbody id="all-orders"><tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── New Order Modal ── -->
+    <div class="modal-overlay" id="newOrderModal">
+      <div class="modal">
+        <div class="modal-title">📦 New Sales Order</div>
+        <div class="modal-sub">Credit check runs automatically on submission</div>
+
+        <div class="form-group">
+          <label class="form-label">Customer *</label>
+          <select class="form-select" id="mo-customer" onchange="onCustomerChange()">
+            <option value="">-- Select Customer --</option>
+          </select>
+        </div>
+
+        <div class="credit-info" id="credit-info">
+          <div class="ci-row"><span class="ci-label">Credit Limit</span><span class="ci-val" id="ci-limit">—</span></div>
+          <div class="ci-row"><span class="ci-label">Used</span><span class="ci-val" id="ci-used">—</span></div>
+          <div class="ci-row"><span class="ci-label" style="color:var(--green)">Available</span><span class="ci-val" id="ci-avail" style="color:var(--green)">—</span></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Order Value (INR) *</label>
+          <input class="form-input" id="mo-value" type="number" placeholder="e.g. 500000" min="1" oninput="checkCreditWarn()" />
+          <div class="ci-warn" id="ci-warn" style="display:none">⚠️ This order will exceed the credit limit and be BLOCKED for approval</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          <input class="form-input" id="mo-desc" type="text" placeholder="e.g. Q1 Bulk Purchase Order" />
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="submitNewOrder()" style="flex:1">Submit Order</button>
+          <button class="btn btn-outline" onclick="closeNewOrder()">Cancel</button>
         </div>
       </div>
     </div>
@@ -432,7 +490,11 @@
 </div>
 
 <script>
-const BASE = '/api/o2c';
+// Auto-detect API base URL: Live Server (5500) → CDS server (4004)
+const API_HOST = window.location.port === '5500' || window.location.port === '5501'
+  ? 'http://localhost:4004'
+  : '';
+const BASE = API_HOST + '/api/o2c';
 const INR = v => '₹' + Number(v||0).toLocaleString('en-IN');
 const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '—';
 
@@ -660,6 +722,77 @@ async function processDunning() {
 }
 
 function refreshAll() { loadPage('dashboard'); toast('Data refreshed!','success'); }
+
+// ── New Order Modal ────────────────────────────────────────────
+let _customers = [];
+
+async function openNewOrder() {
+  document.getElementById('newOrderModal').classList.add('show');
+  document.getElementById('mo-customer').value = '';
+  document.getElementById('mo-value').value = '';
+  document.getElementById('mo-desc').value = '';
+  document.getElementById('credit-info').classList.remove('show');
+  document.getElementById('ci-warn').style.display = 'none';
+  if (_customers.length === 0) {
+    _customers = await apiFetch('/Customers');
+    const sel = document.getElementById('mo-customer');
+    sel.innerHTML = '<option value="">-- Select Customer --</option>' +
+      _customers.map(c => `<option value="${c.customerId}" data-limit="${c.creditLimit}" data-balance="${c.currentBalance}">${c.customerName} (${c.creditStatus})</option>`).join('');
+  }
+}
+
+function closeNewOrder() {
+  document.getElementById('newOrderModal').classList.remove('show');
+}
+
+function onCustomerChange() {
+  const sel = document.getElementById('mo-customer');
+  const opt = sel.selectedOptions[0];
+  if (!opt || !opt.value) { document.getElementById('credit-info').classList.remove('show'); return; }
+  const limit = Number(opt.dataset.limit);
+  const balance = Number(opt.dataset.balance);
+  const avail = limit - balance;
+  document.getElementById('ci-limit').textContent = INR(limit);
+  document.getElementById('ci-used').textContent = INR(balance);
+  document.getElementById('ci-avail').textContent = INR(avail);
+  document.getElementById('ci-avail').style.color = avail > 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('credit-info').classList.add('show');
+  checkCreditWarn();
+}
+
+function checkCreditWarn() {
+  const sel = document.getElementById('mo-customer');
+  const opt = sel.selectedOptions[0];
+  if (!opt || !opt.value) return;
+  const avail = Number(opt.dataset.limit) - Number(opt.dataset.balance);
+  const val = Number(document.getElementById('mo-value').value);
+  document.getElementById('ci-warn').style.display = (val > avail && val > 0) ? 'block' : 'none';
+}
+
+async function submitNewOrder() {
+  const customerId = document.getElementById('mo-customer').value;
+  const orderValue = Number(document.getElementById('mo-value').value);
+  if (!customerId) return toast('Please select a customer', 'error');
+  if (!orderValue || orderValue <= 0) return toast('Please enter a valid order value', 'error');
+  try {
+    const r = await fetch(BASE + '/submitSalesOrder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId, orderValue })
+    });
+    const j = await r.json();
+    const result = j.value || j;
+    closeNewOrder();
+    toast(result.message || 'Order submitted!', result.creditBlocked ? 'error' : 'success');
+    loadPage('orders');
+    loadDashboard();
+  } catch(e) { toast('Error submitting order: ' + e.message, 'error'); }
+}
+
+// Close modal on overlay click
+document.getElementById('newOrderModal').addEventListener('click', function(e) {
+  if (e.target === this) closeNewOrder();
+});
 
 // Init
 loadDashboard();
