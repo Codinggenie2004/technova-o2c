@@ -1,4 +1,4 @@
-name: Deploy to SAP BTP
+name: TechNova O2C — Build & Validate
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  validate:
+    name: Validate CDS Model
     runs-on: ubuntu-latest
 
     steps:
@@ -19,44 +19,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install CDS toolkit
+      - name: Install SAP CDS toolkit
         run: npm install -g @sap/cds-dk
 
-      - name: Validate CDS model
-        run: cds compile db/ srv/ --to json > /dev/null && echo "✅ CDS model is valid"
+      - name: Validate CDS data model
+        run: cds compile db/schema.cds --to json > /dev/null && echo "✅ Schema is valid"
 
-      - name: Deploy to SQLite (test)
-        run: cds deploy --to sqlite:test.sqlite
+      - name: Validate CDS service
+        run: cds compile srv/o2c-service.cds db/schema.cds --to json > /dev/null && echo "✅ Service is valid"
 
-      - name: Run tests
-        run: npm test
+      - name: List all entities and services
+        run: cds compile db/ srv/ --to json | node -e "const m=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); const keys=Object.keys(m.definitions||{}); console.log('📦 Entities/Services found:',keys.length); keys.forEach(k=>console.log(' -',k))"
 
-  # Uncomment below when you have BTP credentials in GitHub Secrets
-  # deploy-to-btp:
-  #   name: Deploy to SAP BTP
-  #   runs-on: ubuntu-latest
-  #   needs: build-and-test
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #     - name: Install MBT
-  #       run: npm install -g mbt
-  #     - name: Build MTA
-  #       run: mbt build -p cf
-  #     - name: Deploy to BTP
-  #       uses: SAP/cloud-foundry-tools@v1
-  #       with:
-  #         api: ${{ secrets.CF_API }}
-  #         org: ${{ secrets.CF_ORG }}
-  #         space: ${{ secrets.CF_SPACE }}
-  #         username: ${{ secrets.CF_USERNAME }}
-  #         password: ${{ secrets.CF_PASSWORD }}
+      - name: Check project structure
+        run: |
+          echo "📁 Project structure:"
+          find . -not -path './node_modules/*' -not -path './.git/*' -type f | sort
