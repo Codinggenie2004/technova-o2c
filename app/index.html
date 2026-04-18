@@ -490,10 +490,39 @@
 </div>
 
 <script>
-// API always runs on CDS server port 4004 (CORS enabled)
+// ── Embedded Sample Data (works offline + with live CDS) ──────────────────
+const DEMO_CUSTOMERS = [
+  { ID:'c1', customerId:'CUST-001', customerName:'Reliance Infra Ltd',    city:'Mumbai',    creditLimit:5000000,  currentBalance:3800000, creditStatus:'ACTIVE'  },
+  { ID:'c2', customerId:'CUST-002', customerName:'Tata Steel Ltd',        city:'Mumbai',    creditLimit:10000000, currentBalance:4200000, creditStatus:'ACTIVE'  },
+  { ID:'c3', customerId:'CUST-003', customerName:'Infosys Technologies',  city:'Bengaluru', creditLimit:7500000,  currentBalance:7200000, creditStatus:'ACTIVE'  },
+  { ID:'c4', customerId:'CUST-004', customerName:'Wipro Limited',         city:'Bengaluru', creditLimit:6000000,  currentBalance:1500000, creditStatus:'ACTIVE'  },
+  { ID:'c5', customerId:'CUST-005', customerName:'HCL Technologies',      city:'Delhi',     creditLimit:8000000,  currentBalance:6900000, creditStatus:'BLOCKED' },
+];
+const DEMO_ORDERS = [];
+const DEMO_BLOCKS = [];
+const DEMO_PAYMENTS = [
+  { ID:'p1', invoiceNumber:'INV-TN-240001', customerName:'Reliance Infra Ltd',   dueDate:'2024-02-25', invoiceAmount:850000,  outstandingAmt:0,      paymentStatus:'PAID',    dunningLevel:0, daysOverdue:0  },
+  { ID:'p2', invoiceNumber:'INV-TN-240002', customerName:'Tata Steel Ltd',       dueDate:'2024-03-01', invoiceAmount:1200000, outstandingAmt:600000, paymentStatus:'OVERDUE', dunningLevel:2, daysOverdue:45 },
+  { ID:'p3', invoiceNumber:'INV-TN-240003', customerName:'Infosys Technologies', dueDate:'2024-03-15', invoiceAmount:500000,  outstandingAmt:500000, paymentStatus:'OVERDUE', dunningLevel:3, daysOverdue:62 },
+  { ID:'p4', invoiceNumber:'INV-TN-240004', customerName:'Wipro Limited',        dueDate:'2024-04-15', invoiceAmount:750000,  outstandingAmt:0,      paymentStatus:'PAID',    dunningLevel:0, daysOverdue:0  },
+];
+
+// Try live API with 2s timeout, else fall back to embedded demo data
 const BASE = 'http://localhost:4004/api/o2c';
-const INR = v => '₹' + Number(v||0).toLocaleString('en-IN');
-const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '—';
+async function apiFetch(path, fallback) {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 2000);
+    const r = await fetch(BASE + path, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    return j.value || j;
+  } catch(e) { return fallback; }
+}
+
+const INR = v => '&#8377;' + Number(v||0).toLocaleString('en-IN');
+const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '&mdash;';
 
 function toast(msg, type='success') {
   const t = document.getElementById('toast');
@@ -519,18 +548,13 @@ function showPage(p) {
   loadPage(p);
 }
 
-async function apiFetch(path) {
-  try {
-    const r = await fetch(BASE+path);
-    if(!r.ok) throw new Error(r.status);
-    const j = await r.json();
-    return j.value || j;
-  } catch(e) { console.error('API error',e); return []; }
-}
 
 async function loadDashboard() {
   const [orders, blocks, payments, customers] = await Promise.all([
-    apiFetch('/SalesOrders'), apiFetch('/CreditBlockLog'), apiFetch('/Payments'), apiFetch('/Customers')
+    apiFetch('/SalesOrders',   DEMO_ORDERS),
+    apiFetch('/CreditBlockLog', DEMO_BLOCKS),
+    apiFetch('/Payments',      DEMO_PAYMENTS),
+    apiFetch('/Customers',     DEMO_CUSTOMERS)
   ]);
 
   // KPIs
@@ -580,8 +604,8 @@ async function loadDashboard() {
 async function loadPage(p) {
   if(p==='dashboard') { loadDashboard(); return; }
   if(p==='orders') {
-    const data = await apiFetch('/SalesOrders');
-    document.getElementById('all-orders').innerHTML = data.map(o=>`
+    const data = await apiFetch('/SalesOrders', DEMO_ORDERS);
+    document.getElementById('all-orders').innerHTML = data.length ? data.map(o=>`
       <tr>
         <td style="font-weight:600;color:var(--accent2)">${o.salesOrderId}</td>
         <td>${o.customerName||'—'}</td>
@@ -589,10 +613,10 @@ async function loadPage(p) {
         <td style="font-weight:600">${INR(o.orderValue)}</td>
         <td>${INR(o.customerCreditLimit)}</td>
         <td>${statusTag(o.status)}</td>
-      </tr>`).join('');
+      </tr>`).join('') : '<tr><td colspan="6" style="color:var(--muted);padding:20px;text-align:center">No orders yet — click + New Order to create one</td></tr>';
   }
   if(p==='customers') {
-    const data = await apiFetch('/Customers');
+    const data = await apiFetch('/Customers', DEMO_CUSTOMERS);
     document.getElementById('all-customers').innerHTML = data.map(c=>`
       <tr>
         <td style="color:var(--muted)">${c.customerId}</td>
@@ -605,8 +629,8 @@ async function loadPage(p) {
       </tr>`).join('');
   }
   if(p==='creditblocks') {
-    const data = await apiFetch('/CreditBlockLog');
-    document.getElementById('all-blocks').innerHTML = data.map(b=>`
+    const data = await apiFetch('/CreditBlockLog', DEMO_BLOCKS);
+    document.getElementById('all-blocks').innerHTML = data.length ? data.map(b=>`
       <tr>
         <td style="font-weight:600;color:var(--accent2)">${b.salesOrderNumber||'—'}</td>
         <td>${b.customerName||'—'}</td>
@@ -622,7 +646,7 @@ async function loadPage(p) {
       </tr>`).join('');
   }
   if(p==='dunning') {
-    const data = await apiFetch('/Payments');
+    const data = await apiFetch('/Payments', DEMO_PAYMENTS);
     const lvlColors = ['tag-gray','tag-yellow','tag-red','tag-purple'];
     const lvlLabels = ['None','Level 1 - Reminder','Level 2 - Warning','Level 3 - Final'];
     document.getElementById('all-payments').innerHTML = data.map(p=>`
@@ -638,7 +662,7 @@ async function loadPage(p) {
       </tr>`).join('');
   }
   if(p==='analytics') {
-    const [orders, payments] = await Promise.all([apiFetch('/SalesOrders'), apiFetch('/Payments')]);
+    const [orders, payments] = await Promise.all([apiFetch('/SalesOrders', DEMO_ORDERS), apiFetch('/Payments', DEMO_PAYMENTS)]);
     const total = orders.reduce((s,o)=>s+Number(o.orderValue||0),0);
     const confirmed = orders.filter(o=>['CONFIRMED','DELIVERED'].includes(o.status)).reduce((s,o)=>s+Number(o.orderValue||0),0);
     const blocked = orders.filter(o=>o.status==='CREDIT_BLOCKED').reduce((s,o)=>s+Number(o.orderValue||0),0);
@@ -731,7 +755,7 @@ async function openNewOrder() {
   document.getElementById('credit-info').classList.remove('show');
   document.getElementById('ci-warn').style.display = 'none';
   if (_customers.length === 0) {
-    _customers = await apiFetch('/Customers');
+    _customers = await apiFetch('/Customers', DEMO_CUSTOMERS);
     const sel = document.getElementById('mo-customer');
     sel.innerHTML = '<option value="">-- Select Customer --</option>' +
       _customers.map(c => `<option value="${c.customerId}" data-limit="${c.creditLimit}" data-balance="${c.currentBalance}">${c.customerName} (${c.creditStatus})</option>`).join('');
