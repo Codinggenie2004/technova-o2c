@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TechNova O2C Dashboard | SAP BTP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #0070f2;
+      --accent2: #00c4ff;
+      --green: #00c48c;
+      --red: #ff4d6a;
+      --yellow: #ffb340;
+      --purple: #7c5cfc;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 24px 0; position: fixed; height: 100vh; z-index: 100;
+    }
+    .logo { padding: 0 20px 28px; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,#0070f2,#00c4ff); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; }
+    .logo-text { font-size: 14px; font-weight: 700; }
+    .logo-sub { font-size: 10px; color: var(--muted); font-weight: 400; }
+    .nav-section { padding: 0 12px; margin-bottom: 8px; }
+    .nav-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; padding: 0 8px 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.2s; margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: linear-gradient(135deg,rgba(0,112,242,0.2),rgba(0,196,255,0.1));
+      color: var(--accent2); border: 1px solid rgba(0,112,242,0.3); }
+    .nav-icon { font-size: 16px; }
+    .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px;
+      font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+
+    /* ── Main Content ── */
+    .main { margin-left: 240px; flex: 1; padding: 32px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .page-title { font-size: 26px; font-weight: 800; }
+    .page-subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .topbar-actions { display: flex; gap: 12px; align-items: center; }
+    .btn {
+      padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .btn-primary { background: linear-gradient(135deg,#0070f2,#00c4ff); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%;
+      display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+    /* ── KPI Cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; position: relative; overflow: hidden; transition: transform 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .kpi-card.blue::before  { background: linear-gradient(90deg,#0070f2,#00c4ff); }
+    .kpi-card.green::before { background: linear-gradient(90deg,#00c48c,#00e5a0); }
+    .kpi-card.red::before   { background: linear-gradient(90deg,#ff4d6a,#ff8c69); }
+    .kpi-card.purple::before{ background: linear-gradient(90deg,#7c5cfc,#c77dff); }
+    .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 12px; }
+    .kpi-value { font-size: 32px; font-weight: 800; line-height: 1; }
+    .kpi-value.blue  { color: var(--accent2); }
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.red   { color: var(--red); }
+    .kpi-value.purple{ color: var(--purple); }
+    .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .kpi-icon { position: absolute; right: 16px; top: 16px; font-size: 28px; opacity: 0.15; }
+
+    /* ── Section ── */
+    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
+    }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .badge-blue   { background: rgba(0,112,242,0.15); color: var(--accent2); }
+    .badge-red    { background: rgba(255,77,106,0.15); color: var(--red); }
+    .badge-green  { background: rgba(0,196,140,0.15); color: var(--green); }
+    .badge-yellow { background: rgba(255,179,64,0.15); color: var(--yellow); }
+    .badge-purple { background: rgba(124,92,252,0.15); color: var(--purple); }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 10px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px; padding: 0 12px 10px 0; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 12px 12px 0; border-bottom: 1px solid rgba(46,50,80,0.5); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block; }
+    .tag-green  { background: rgba(0,196,140,0.15); color: var(--green); }
+    .tag-red    { background: rgba(255,77,106,0.15); color: var(--red); }
+    .tag-yellow { background: rgba(255,179,64,0.15); color: var(--yellow); }
+    .tag-blue   { background: rgba(0,112,242,0.15); color: var(--accent2); }
+    .tag-purple { background: rgba(124,92,252,0.15); color: var(--purple); }
+    .tag-gray   { background: rgba(107,114,128,0.15); color: var(--muted); }
+
+    /* ── Credit Bar ── */
+    .credit-bar { height: 6px; background: var(--surface2); border-radius: 4px; margin-top: 4px; }
+    .credit-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
+
+    /* ── Dunning Level ── */
+    .dunning-pip { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 2px; }
+
+    /* ── Action Btn ── */
+    .action-btn { padding: 5px 12px; border-radius: 7px; font-size: 11px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s; }
+    .action-btn.approve { background: rgba(0,196,140,0.15); color: var(--green); }
+    .action-btn.approve:hover { background: var(--green); color: #000; }
+    .action-btn.reject  { background: rgba(255,77,106,0.15); color: var(--red);   }
+    .action-btn.reject:hover  { background: var(--red);  color: #fff; }
+
+    /* ── Full width card ── */
+    .full-card { margin-bottom: 24px; }
+
+    /* ── Loading spinner ── */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px;
+      color: var(--muted); font-size: 13px; gap: 8px; }
+    .spinner { width: 18px; height: 18px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px;
+      font-size: 13px; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      z-index: 999; animation: slideIn 0.3s ease; }
+    .toast.show { display: flex; }
+    @keyframes slideIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    /* ── Analytics chart ── */
+    .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; margin-top: 8px; }
+    .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .chart-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.6s; min-height: 4px; }
+    .chart-label { font-size: 9px; color: var(--muted); }
+
+    @media (max-width: 1100px) {
+      .kpi-grid { grid-template-columns: repeat(2,1fr); }
+      .section-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">TN</div>
+      <div>
+        <div class="logo-text">TechNova O2C</div>
+        <div class="logo-sub">SAP BTP Platform</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('orders')">
+        <span class="nav-icon">📦</span> Sales Orders
+      </div>
+      <div class="nav-item" onclick="showPage('customers')">
+        <span class="nav-icon">🏢</span> Customers
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Operations</div>
+      <div class="nav-item" onclick="showPage('creditblocks')">
+        <span class="nav-icon">🔒</span> Credit Blocks
+        <span class="nav-badge" id="creditBadge">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('dunning')">
+        <span class="nav-icon">📬</span> Dunning
+      </div>
+      <div class="nav-item" onclick="showPage('analytics')">
+        <span class="nav-icon">📈</span> Analytics
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:auto">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="refreshAll()">
+        <span class="nav-icon">🔄</span> Refresh Data
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── Dashboard Page ── -->
+    <div id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <div class="page-title">O2C Dashboard</div>
+          <div class="page-subtitle"><span class="status-dot"></span>Live · SAP BTP Trial · dedb24a4trial.ap21</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="refreshAll()">🔄 Refresh</button>
+          <button class="btn btn-primary" onclick="showPage('orders')">+ New Order</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-label">Total Orders</div>
+          <div class="kpi-value blue" id="kpi-orders">—</div>
+          <div class="kpi-sub">All time</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-label">Confirmed Orders</div>
+          <div class="kpi-value green" id="kpi-confirmed">—</div>
+          <div class="kpi-sub">Released from blocks</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-icon">🔒</div>
+          <div class="kpi-label">Credit Blocks</div>
+          <div class="kpi-value red" id="kpi-blocked">—</div>
+          <div class="kpi-sub">Pending approval</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-icon">📬</div>
+          <div class="kpi-label">Overdue Invoices</div>
+          <div class="kpi-value purple" id="kpi-overdue">—</div>
+          <div class="kpi-sub">Requiring dunning</div>
+        </div>
+      </div>
+
+      <!-- Two-column -->
+      <div class="section-grid">
+        <!-- Recent Orders -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Sales Orders</div>
+            <span class="card-badge badge-blue">Live Data</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Order ID</th><th>Customer</th><th>Value</th><th>Status</th>
+              </tr></thead>
+              <tbody id="recent-orders"><tr><td colspan="4" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Credit Blocks -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Credit Block Queue</div>
+            <span class="card-badge badge-red">Pending Approval</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Order</th><th>Customer</th><th>Exceeded By</th><th>Action</th>
+              </tr></thead>
+              <tbody id="credit-blocks-mini"><tr><td colspan="4" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customers Overview -->
+      <div class="card full-card">
+        <div class="card-header">
+          <div class="card-title">Customer Credit Overview</div>
+          <span class="card-badge badge-green">5 Customers</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Customer</th><th>Credit Limit</th><th>Used</th><th>Available</th><th>Utilization</th><th>Status</th>
+            </tr></thead>
+            <tbody id="customers-overview"><tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Orders Page ── -->
+    <div id="page-orders" style="display:none">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Sales Orders</div>
+          <div class="page-subtitle">All O2C sales orders with credit check status</div>
+        </div>
+      </div>
+      <div class="card full-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Order ID</th><th>Customer</th><th>Date</th><th>Value (INR)</th><th>Credit Limit</th><th>Status</th>
+            </tr></thead>
+            <tbody id="all-orders"><tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Customers Page ── -->
+    <div id="page-customers" style="display:none">
+      <div class="topbar">
+        <div><div class="page-title">Customers</div>
+        <div class="page-subtitle">Customer master data with credit utilization</div></div>
+      </div>
+      <div class="card full-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>ID</th><th>Name</th><th>City</th><th>Credit Limit</th><th>Balance</th><th>Available</th><th>Status</th>
+            </tr></thead>
+            <tbody id="all-customers"><tr><td colspan="7" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Credit Blocks Page ── -->
+    <div id="page-creditblocks" style="display:none">
+      <div class="topbar">
+        <div><div class="page-title">Credit Block Management</div>
+        <div class="page-subtitle">SBPA Workflow — Approve or Reject blocked sales orders</div></div>
+      </div>
+      <div class="card full-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Order</th><th>Customer</th><th>Order Value</th><th>Credit Limit</th><th>Exceeded By</th><th>Blocked At</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="all-blocks"><tr><td colspan="8" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dunning Page ── -->
+    <div id="page-dunning" style="display:none">
+      <div class="topbar">
+        <div><div class="page-title">Dunning Management</div>
+        <div class="page-subtitle">Overdue invoice tracking — 3-level escalation</div></div>
+        <button class="btn btn-primary" onclick="processDunning()">⚡ Run Dunning Process</button>
+      </div>
+      <div class="card full-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Invoice</th><th>Customer</th><th>Due Date</th><th>Amount (INR)</th><th>Outstanding</th><th>Days Overdue</th><th>Dunning Level</th><th>Status</th>
+            </tr></thead>
+            <tbody id="all-payments"><tr><td colspan="8" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Analytics Page ── -->
+    <div id="page-analytics" style="display:none">
+      <div class="topbar">
+        <div><div class="page-title">O2C Analytics</div>
+        <div class="page-subtitle">KPI Dashboard — Order-to-Cash performance metrics</div></div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-icon">💰</div>
+          <div class="kpi-label">Total Order Value</div>
+          <div class="kpi-value blue" id="ana-totalval">—</div>
+          <div class="kpi-sub">INR</div></div>
+        <div class="kpi-card green"><div class="kpi-icon">📈</div>
+          <div class="kpi-label">Confirmed Value</div>
+          <div class="kpi-value green" id="ana-confirmedval">—</div>
+          <div class="kpi-sub">Released orders</div></div>
+        <div class="kpi-card red"><div class="kpi-icon">⚠️</div>
+          <div class="kpi-label">Blocked Value</div>
+          <div class="kpi-value red" id="ana-blockedval">—</div>
+          <div class="kpi-sub">Pending approval</div></div>
+        <div class="kpi-card purple"><div class="kpi-icon">🏦</div>
+          <div class="kpi-label">Outstanding AR</div>
+          <div class="kpi-value purple" id="ana-ar">—</div>
+          <div class="kpi-sub">Accounts receivable</div></div>
+      </div>
+      <div class="section-grid">
+        <div class="card">
+          <div class="card-title">Order Status Breakdown</div>
+          <div id="status-chart" style="margin-top:16px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Dunning Level Distribution</div>
+          <div id="dunning-chart" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Action completed</span>
+</div>
+
+<script>
+const BASE = '/api/o2c';
+const INR = v => '₹' + Number(v||0).toLocaleString('en-IN');
+const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '—';
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = type==='success'?'✅':type==='error'?'❌':'⚠️';
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+function statusTag(s) {
+  const map = {
+    'CONFIRMED':'tag-green','DELIVERED':'tag-blue','CREDIT_BLOCKED':'tag-red',
+    'CANCELLED':'tag-gray','PENDING':'tag-yellow','SHIPPED':'tag-blue'
+  };
+  return `<span class="tag ${map[s]||'tag-gray'}">${s||'UNKNOWN'}</span>`;
+}
+
+function showPage(p) {
+  document.querySelectorAll('[id^=page-]').forEach(el=>el.style.display='none');
+  document.getElementById('page-'+p).style.display='';
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  loadPage(p);
+}
+
+async function apiFetch(path) {
+  try {
+    const r = await fetch(BASE+path);
+    if(!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    return j.value || j;
+  } catch(e) { console.error('API error',e); return []; }
+}
+
+async function loadDashboard() {
+  const [orders, blocks, payments, customers] = await Promise.all([
+    apiFetch('/SalesOrders'), apiFetch('/CreditBlockLog'), apiFetch('/Payments'), apiFetch('/Customers')
+  ]);
+
+  // KPIs
+  document.getElementById('kpi-orders').textContent = orders.length;
+  document.getElementById('kpi-confirmed').textContent = orders.filter(o=>o.status==='CONFIRMED'||o.status==='DELIVERED').length;
+  const pending = blocks.filter(b=>b.status==='PENDING');
+  document.getElementById('kpi-blocked').textContent = pending.length;
+  document.getElementById('creditBadge').textContent = pending.length;
+  document.getElementById('kpi-overdue').textContent = payments.filter(p=>p.paymentStatus==='OVERDUE').length;
+
+  // Recent orders
+  document.getElementById('recent-orders').innerHTML = orders.slice(0,6).map(o=>`
+    <tr>
+      <td style="font-weight:600;color:var(--accent2)">${o.salesOrderId}</td>
+      <td>${o.customerName||o.customer_customerName||'—'}</td>
+      <td>${INR(o.orderValue)}</td>
+      <td>${statusTag(o.status)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:var(--muted);padding:20px">No orders found</td></tr>';
+
+  // Credit blocks mini
+  document.getElementById('credit-blocks-mini').innerHTML = pending.length ? pending.map(b=>`
+    <tr>
+      <td style="font-weight:600;color:var(--accent2)">${b.salesOrderNumber||'—'}</td>
+      <td>${b.customerName||'—'}</td>
+      <td style="color:var(--red);font-weight:600">${INR(b.exceededBy)}</td>
+      <td><button class="action-btn approve" onclick="approve('${b.ID}')">Approve</button></td>
+    </tr>`).join('') : '<tr><td colspan="4" style="color:var(--green);padding:16px">✅ No pending blocks</td></tr>';
+
+  // Customers overview
+  document.getElementById('customers-overview').innerHTML = customers.map(c=>{
+    const used = (c.currentBalance/c.creditLimit*100)||0;
+    const avail = c.creditLimit - c.currentBalance;
+    const color = used>90?'var(--red)':used>70?'var(--yellow)':'var(--green)';
+    return `<tr>
+      <td style="font-weight:600">${c.customerName}</td>
+      <td>${INR(c.creditLimit)}</td>
+      <td>${INR(c.currentBalance)}</td>
+      <td style="color:${avail>0?'var(--green)':'var(--red)'}">${INR(avail)}</td>
+      <td style="width:120px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${used.toFixed(1)}%</div>
+        <div class="credit-bar"><div class="credit-fill" style="width:${Math.min(used,100)}%;background:${color}"></div></div>
+      </td>
+      <td><span class="tag ${c.creditStatus==='ACTIVE'?'tag-green':'tag-red'}">${c.creditStatus}</span></td>
+    </tr>`;}).join('');
+}
+
+async function loadPage(p) {
+  if(p==='dashboard') { loadDashboard(); return; }
+  if(p==='orders') {
+    const data = await apiFetch('/SalesOrders');
+    document.getElementById('all-orders').innerHTML = data.map(o=>`
+      <tr>
+        <td style="font-weight:600;color:var(--accent2)">${o.salesOrderId}</td>
+        <td>${o.customerName||'—'}</td>
+        <td>${fmt(o.orderDate)}</td>
+        <td style="font-weight:600">${INR(o.orderValue)}</td>
+        <td>${INR(o.customerCreditLimit)}</td>
+        <td>${statusTag(o.status)}</td>
+      </tr>`).join('');
+  }
+  if(p==='customers') {
+    const data = await apiFetch('/Customers');
+    document.getElementById('all-customers').innerHTML = data.map(c=>`
+      <tr>
+        <td style="color:var(--muted)">${c.customerId}</td>
+        <td style="font-weight:600">${c.customerName}</td>
+        <td>${c.city}</td>
+        <td>${INR(c.creditLimit)}</td>
+        <td>${INR(c.currentBalance)}</td>
+        <td style="color:${(c.creditLimit-c.currentBalance)>0?'var(--green)':'var(--red)'}">${INR(c.creditLimit-c.currentBalance)}</td>
+        <td><span class="tag ${c.creditStatus==='ACTIVE'?'tag-green':'tag-red'}">${c.creditStatus}</span></td>
+      </tr>`).join('');
+  }
+  if(p==='creditblocks') {
+    const data = await apiFetch('/CreditBlockLog');
+    document.getElementById('all-blocks').innerHTML = data.map(b=>`
+      <tr>
+        <td style="font-weight:600;color:var(--accent2)">${b.salesOrderNumber||'—'}</td>
+        <td>${b.customerName||'—'}</td>
+        <td>${INR(b.orderValue)}</td>
+        <td>${INR(b.creditLimit)}</td>
+        <td style="color:var(--red);font-weight:700">${INR(b.exceededBy)}</td>
+        <td style="color:var(--muted)">${fmt(b.blockedAt)}</td>
+        <td><span class="tag ${b.status==='PENDING'?'tag-yellow':b.status==='APPROVED'?'tag-green':'tag-red'}">${b.status}</span></td>
+        <td>${b.status==='PENDING'?`
+          <button class="action-btn approve" onclick="approve('${b.ID}')">✅ Approve</button>
+          <button class="action-btn reject" onclick="reject('${b.ID}')" style="margin-left:4px">❌ Reject</button>`:'—'}
+        </td>
+      </tr>`).join('');
+  }
+  if(p==='dunning') {
+    const data = await apiFetch('/Payments');
+    const lvlColors = ['tag-gray','tag-yellow','tag-red','tag-purple'];
+    const lvlLabels = ['None','Level 1 - Reminder','Level 2 - Warning','Level 3 - Final'];
+    document.getElementById('all-payments').innerHTML = data.map(p=>`
+      <tr>
+        <td style="font-weight:600;color:var(--accent2)">${p.invoiceNumber}</td>
+        <td>${p.customerName||'—'}</td>
+        <td>${fmt(p.dueDate)}</td>
+        <td>${INR(p.invoiceAmount)}</td>
+        <td style="color:${p.outstandingAmt>0?'var(--red)':'var(--green)'};font-weight:600">${INR(p.outstandingAmt)}</td>
+        <td style="color:${p.daysOverdue>0?'var(--red)':'var(--muted)'}">${p.daysOverdue||0} days</td>
+        <td><span class="tag ${lvlColors[p.dunningLevel||0]}">${lvlLabels[p.dunningLevel||0]}</span></td>
+        <td><span class="tag ${p.paymentStatus==='PAID'?'tag-green':p.paymentStatus==='OVERDUE'?'tag-red':'tag-yellow'}">${p.paymentStatus}</span></td>
+      </tr>`).join('');
+  }
+  if(p==='analytics') {
+    const [orders, payments] = await Promise.all([apiFetch('/SalesOrders'), apiFetch('/Payments')]);
+    const total = orders.reduce((s,o)=>s+Number(o.orderValue||0),0);
+    const confirmed = orders.filter(o=>['CONFIRMED','DELIVERED'].includes(o.status)).reduce((s,o)=>s+Number(o.orderValue||0),0);
+    const blocked = orders.filter(o=>o.status==='CREDIT_BLOCKED').reduce((s,o)=>s+Number(o.orderValue||0),0);
+    const ar = payments.reduce((s,p)=>s+Number(p.outstandingAmt||0),0);
+    document.getElementById('ana-totalval').textContent = INR(total);
+    document.getElementById('ana-confirmedval').textContent = INR(confirmed);
+    document.getElementById('ana-blockedval').textContent = INR(blocked);
+    document.getElementById('ana-ar').textContent = INR(ar);
+
+    // Status chart
+    const statuses = {};
+    orders.forEach(o=>{ statuses[o.status]=(statuses[o.status]||0)+1; });
+    const max = Math.max(...Object.values(statuses),1);
+    const colors = {CONFIRMED:'var(--green)',DELIVERED:'var(--accent)',CREDIT_BLOCKED:'var(--red)',CANCELLED:'var(--muted)',PENDING:'var(--yellow)'};
+    document.getElementById('status-chart').innerHTML = `
+      <div class="chart-bars">
+        ${Object.entries(statuses).map(([s,v])=>`
+          <div class="chart-bar-wrap">
+            <div style="font-size:11px;color:var(--text);text-align:center">${v}</div>
+            <div class="chart-bar" style="height:${(v/max)*70}px;background:${colors[s]||'var(--purple)'}"></div>
+            <div class="chart-label">${s.replace('_',' ')}</div>
+          </div>`).join('')}
+      </div>`;
+
+    // Dunning chart
+    const lvls = [0,0,0,0];
+    payments.forEach(p=>{ lvls[p.dunningLevel||0]++; });
+    const maxD = Math.max(...lvls,1);
+    const dlabels=['No Dunning','Level 1','Level 2','Level 3'];
+    const dcolors=['var(--muted)','var(--yellow)','var(--red)','var(--purple)'];
+    document.getElementById('dunning-chart').innerHTML = `
+      <div class="chart-bars">
+        ${lvls.map((v,i)=>`
+          <div class="chart-bar-wrap">
+            <div style="font-size:11px;color:var(--text);text-align:center">${v}</div>
+            <div class="chart-bar" style="height:${(v/maxD)*70}px;background:${dcolors[i]}"></div>
+            <div class="chart-label">${dlabels[i]}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+}
+
+async function approve(id) {
+  const comment = prompt('Manager Comment (required):');
+  if(!comment) return;
+  try {
+    const r = await fetch(BASE+'/approveCreditBlock', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({creditBlockId:id, managerComment:comment})
+    });
+    const j = await r.json();
+    toast(j.value?.message || 'Credit block approved!', 'success');
+    loadPage('creditblocks');
+  } catch(e) { toast('Error approving credit block','error'); }
+}
+
+async function reject(id) {
+  const comment = prompt('Rejection Reason (required):');
+  if(!comment) return;
+  try {
+    await fetch(BASE+'/rejectCreditBlock', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({creditBlockId:id, managerComment:comment})
+    });
+    toast('Credit block rejected and order cancelled.','success');
+    loadPage('creditblocks');
+  } catch(e) { toast('Error rejecting credit block','error'); }
+}
+
+async function processDunning() {
+  toast('Running dunning process...','info');
+  try {
+    const r = await fetch(BASE+'/processDunning', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    const j = await r.json();
+    toast(j.value?.message || 'Dunning complete!', 'success');
+    loadPage('dunning');
+  } catch(e) { toast('Error running dunning','error'); }
+}
+
+function refreshAll() { loadPage('dashboard'); toast('Data refreshed!','success'); }
+
+// Init
+loadDashboard();
+</script>
+</body>
+</html>
