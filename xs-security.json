@@ -1,0 +1,45 @@
+{
+  "xsappname": "technova-o2c",
+  "tenant-mode": "dedicated",
+  "description": "TechNova O2C Security Config",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.admin",
+      "description": "Admin access to O2C application"
+    },
+    {
+      "name": "$XSAPPNAME.creditmanager",
+      "description": "Credit Manager - approve/reject credit blocks"
+    },
+    {
+      "name": "$XSAPPNAME.viewer",
+      "description": "Read-only access to O2C data"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Admin",
+      "description": "Full O2C administration",
+      "scope-references": [
+        "$XSAPPNAME.admin",
+        "$XSAPPNAME.creditmanager",
+        "$XSAPPNAME.viewer"
+      ]
+    },
+    {
+      "name": "CreditManager",
+      "description": "Credit block approval role",
+      "scope-references": [
+        "$XSAPPNAME.creditmanager",
+        "$XSAPPNAME.viewer"
+      ]
+    },
+    {
+      "name": "Viewer",
+      "description": "Read-only access",
+      "scope-references": [
+        "$XSAPPNAME.viewer"
+      ]
+    }
+  ]
+}

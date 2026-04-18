@@ -1,0 +1,46 @@
+{
+  "name": "technova-o2c",
+  "version": "1.0.0",
+  "description": "TechNova Solutions Order-to-Cash process on SAP BTP using SAP CAP",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Codinggenie2004/technova-o2c.git"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@sap/cds": "^8",
+    "@sap/cds-dk": "^9",
+    "express": "^4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "cds-serve",
+    "dev": "cds watch",
+    "build": "cds build --production",
+    "deploy:sqlite": "cds deploy --to sqlite",
+    "test": "echo \"No tests yet\""
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "database": "db.sqlite"
+        },
+        "[production]": {
+          "kind": "hana-cloud"
+        }
+      },
+      "auth": {
+        "kind": "mocked",
+        "[production]": {
+          "kind": "xsuaa"
+        }
+      }
+    },
+    "features": {
+      "fetch_csrf": true
+    }
+  }
+}
