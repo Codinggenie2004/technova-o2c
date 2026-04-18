@@ -185,6 +185,9 @@
     .ci-label { color:var(--muted); }
     .ci-val { font-weight:600; }
     .ci-warn { color:var(--red);font-weight:700;margin-top:8px;font-size:12px; }
+    .btn-invoice { padding:4px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;
+      background:rgba(0,196,140,0.12);color:var(--green);transition:all 0.2s; }
+    .btn-invoice:hover { background:var(--green);color:#000; }
   </style>
 </head>
 <body>
@@ -344,9 +347,9 @@
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>Order ID</th><th>Customer</th><th>Date</th><th>Value (INR)</th><th>Credit Limit</th><th>Status</th>
+              <th>Order ID</th><th>Customer</th><th>Date</th><th>Value (INR)</th><th>Credit Limit</th><th>Status</th><th>Invoice</th>
             </tr></thead>
-            <tbody id="all-orders"><tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
+            <tbody id="all-orders"><tr><td colspan="7" class="loading"><div class="spinner"></div>Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -608,12 +611,15 @@ async function loadPage(p) {
     document.getElementById('all-orders').innerHTML = data.length ? data.map(o=>`
       <tr>
         <td style="font-weight:600;color:var(--accent2)">${o.salesOrderId}</td>
-        <td>${o.customerName||'—'}</td>
+        <td>${o.customerName||'&mdash;'}</td>
         <td>${fmt(o.orderDate)}</td>
         <td style="font-weight:600">${INR(o.orderValue)}</td>
         <td>${INR(o.customerCreditLimit)}</td>
         <td>${statusTag(o.status)}</td>
-      </tr>`).join('') : '<tr><td colspan="6" style="color:var(--muted);padding:20px;text-align:center">No orders yet — click + New Order to create one</td></tr>';
+        <td>${o.status==='CONFIRMED'||o.status==='DELIVERED'
+          ? `<button class="btn-invoice" onclick='generateInvoice(${JSON.stringify(o)})'>&#128196; Invoice</button>`
+          : '&mdash;'}</td>
+      </tr>`).join('') : '<tr><td colspan="7" style="color:var(--muted);padding:20px;text-align:center">No orders yet &mdash; click + New Order to create one</td></tr>';
   }
   if(p==='customers') {
     const data = await apiFetch('/Customers', DEMO_CUSTOMERS);
@@ -859,6 +865,132 @@ async function submitNewOrder() {
 document.getElementById('newOrderModal').addEventListener('click', function(e) {
   if (e.target === this) closeNewOrder();
 });
+
+// ── Invoice Generator ──────────────────────────────────────────────────────
+function generateInvoice(order) {
+  const customer = DEMO_CUSTOMERS.find(c => c.customerName === order.customerName) || {};
+  const invoiceNo = 'INV-TN-' + order.salesOrderId.replace('SO-TN-','');
+  const subtotal  = order.orderValue;
+  const cgst      = Math.round(subtotal * 0.09);
+  const sgst      = Math.round(subtotal * 0.09);
+  const total     = subtotal + cgst + sgst;
+  const dueDate   = new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-IN');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Invoice ${invoiceNo}</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',Arial,sans-serif; background:#fff; color:#1a1a2e; padding:40px; }
+  .inv-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; padding-bottom:20px; border-bottom:3px solid #0070f2; }
+  .inv-brand { font-size:26px; font-weight:800; color:#0070f2; }
+  .inv-brand small { display:block; font-size:11px; font-weight:400; color:#666; margin-top:3px; }
+  .inv-meta { text-align:right; }
+  .inv-meta h2 { font-size:28px; font-weight:800; color:#0070f2; letter-spacing:2px; }
+  .inv-meta p { font-size:12px; color:#555; margin-top:4px; }
+  .inv-parties { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:28px; }
+  .inv-party h4 { font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .inv-party p { font-size:14px; line-height:1.6; }
+  .inv-party strong { font-size:16px; color:#1a1a2e; }
+  table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  th { background:#0070f2; color:#fff; padding:10px 14px; text-align:left; font-size:12px; letter-spacing:0.5px; }
+  td { padding:12px 14px; border-bottom:1px solid #eee; font-size:13px; }
+  tr:nth-child(even) td { background:#f8f9ff; }
+  .totals { margin-left:auto; width:300px; }
+  .totals table td { border:none; padding:6px 14px; }
+  .totals .subtotal { border-top:1px solid #ddd; }
+  .totals .grand { background:#0070f2; color:#fff; font-weight:700; font-size:15px; border-radius:6px; }
+  .totals .grand td { padding:12px 14px; }
+  .inv-footer { margin-top:36px; padding-top:16px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+  .inv-footer p { font-size:11px; color:#888; }
+  .inv-stamp { background:#00c48c;color:#fff;padding:8px 20px;border-radius:20px;font-weight:700;font-size:13px; }
+  .terms { background:#f0f4ff; border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:12px; color:#555; line-height:1.6; }
+  @media print {
+    body { padding:20px; }
+    .no-print { display:none !important; }
+  }
+</style></head><body>
+
+<div class="inv-header">
+  <div>
+    <div class="inv-brand">TechNova Solutions<small>GSTIN: 27AABCT1332L1ZP &nbsp;|&nbsp; PAN: AABCT1332L</small></div>
+    <p style="font-size:12px;color:#666;margin-top:4px">Plot 42, MIDC Phase II, Pune, Maharashtra – 411018<br>orders@technova-solutions.com &nbsp;|&nbsp; +91-20-66789900</p>
+  </div>
+  <div class="inv-meta">
+    <h2>INVOICE</h2>
+    <p><strong>${invoiceNo}</strong></p>
+    <p>Date: ${new Date().toLocaleDateString('en-IN')}</p>
+    <p>Due: ${dueDate}</p>
+  </div>
+</div>
+
+<div class="inv-parties">
+  <div class="inv-party">
+    <h4>Bill To</h4>
+    <p><strong>${order.customerName}</strong><br>
+    ${customer.address||''}${customer.address?'<br>':''}${customer.city||''}, India<br>
+    GSTIN: ${customer.customerId}-GST<br>
+    ${customer.email||''}</p>
+  </div>
+  <div class="inv-party">
+    <h4>Order Reference</h4>
+    <p><strong>${order.salesOrderId}</strong><br>
+    Order Date: ${fmt(order.orderDate)}<br>
+    Payment Terms: Net 30 Days<br>
+    Currency: INR</p>
+  </div>
+</div>
+
+<table>
+  <thead><tr><th>#</th><th>Description</th><th>SAP Material</th><th>Qty</th><th>Rate (INR)</th><th>Amount (INR)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>${order.description || 'Supply of Goods / Services as per Sales Order ' + order.salesOrderId}</td>
+      <td>MAT-TN-001</td>
+      <td>1</td>
+      <td>${INR(subtotal)}</td>
+      <td>${INR(subtotal)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div class="terms">
+    <strong>Terms &amp; Conditions:</strong><br>
+    1. Payment due within 30 days of invoice date.<br>
+    2. Late payments attract 1.5% interest per month.<br>
+    3. Goods once delivered cannot be returned without prior approval.<br>
+    4. Subject to Pune jurisdiction only.
+  </div>
+  <div class="totals">
+    <table>
+      <tr><td>Subtotal</td><td style="text-align:right">${INR(subtotal)}</td></tr>
+      <tr><td>CGST @ 9%</td><td style="text-align:right">${INR(cgst)}</td></tr>
+      <tr><td>SGST @ 9%</td><td style="text-align:right">${INR(sgst)}</td></tr>
+      <tr class="grand"><td><strong>TOTAL</strong></td><td style="text-align:right"><strong>${INR(total)}</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="inv-footer">
+  <div>
+    <p>Bank: HDFC Bank &nbsp;|&nbsp; Account: 50100123456789</p>
+    <p>IFSC: HDFC0001234 &nbsp;|&nbsp; Branch: Pune — Baner</p>
+  </div>
+  <div class="inv-stamp">&#10003; CONFIRMED</div>
+</div>
+
+<div style="margin-top:20px;text-align:center" class="no-print">
+  <button onclick="window.print()" style="background:#0070f2;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">&#128438; Print / Save as PDF</button>
+  <p style="margin-top:8px;font-size:11px;color:#888">Tip: In the print dialog, choose &ldquo;Save as PDF&rdquo; to download</p>
+</div>
+
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+}
 
 // Init
 loadDashboard();
