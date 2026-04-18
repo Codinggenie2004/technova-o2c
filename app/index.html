@@ -608,7 +608,8 @@ async function loadPage(p) {
   if(p==='dashboard') { loadDashboard(); return; }
   if(p==='orders') {
     const data = await apiFetch('/SalesOrders', DEMO_ORDERS);
-    document.getElementById('all-orders').innerHTML = data.length ? data.map(o=>`
+    window.__orders = data; // cache for invoice lookup
+    document.getElementById('all-orders').innerHTML = data.length ? data.map((o,i)=>`
       <tr>
         <td style="font-weight:600;color:var(--accent2)">${o.salesOrderId}</td>
         <td>${o.customerName||'&mdash;'}</td>
@@ -616,8 +617,8 @@ async function loadPage(p) {
         <td style="font-weight:600">${INR(o.orderValue)}</td>
         <td>${INR(o.customerCreditLimit)}</td>
         <td>${statusTag(o.status)}</td>
-        <td>${o.status==='CONFIRMED'||o.status==='DELIVERED'
-          ? `<button class="btn-invoice" onclick='generateInvoice(${JSON.stringify(o)})'>&#128196; Invoice</button>`
+        <td>${(o.status==='CONFIRMED'||o.status==='DELIVERED')
+          ? '<button class="btn-invoice" onclick="generateInvoice('+i+')">📄 Invoice</button>'
           : '&mdash;'}</td>
       </tr>`).join('') : '<tr><td colspan="7" style="color:var(--muted);padding:20px;text-align:center">No orders yet &mdash; click + New Order to create one</td></tr>';
   }
@@ -867,9 +868,11 @@ document.getElementById('newOrderModal').addEventListener('click', function(e) {
 });
 
 // ── Invoice Generator ──────────────────────────────────────────────────────
-function generateInvoice(order) {
+function generateInvoice(idx) {
+  const order    = (window.__orders || DEMO_ORDERS)[idx];
+  if (!order) { alert('Order not found'); return; }
   const customer = DEMO_CUSTOMERS.find(c => c.customerName === order.customerName) || {};
-  const invoiceNo = 'INV-TN-' + order.salesOrderId.replace('SO-TN-','');
+  const invoiceNo = 'INV-TN-' + (order.salesOrderId||'').replace('SO-TN-','');
   const subtotal  = order.orderValue;
   const cgst      = Math.round(subtotal * 0.09);
   const sgst      = Math.round(subtotal * 0.09);
