@@ -490,11 +490,8 @@
 </div>
 
 <script>
-// Auto-detect API base URL: Live Server (5500) → CDS server (4004)
-const API_HOST = window.location.port === '5500' || window.location.port === '5501'
-  ? 'http://localhost:4004'
-  : '';
-const BASE = API_HOST + '/api/o2c';
+// CDS serves both the UI and API on the same port — relative URL always works
+const BASE = '/api/o2c';
 const INR = v => '₹' + Number(v||0).toLocaleString('en-IN');
 const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '—';
 
