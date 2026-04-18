@@ -9,11 +9,11 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@sap/cds": "^8",
+    "@cap-js/sqlite": "^2.2.0",
+    "@sap/cds": "^9",
     "@sap/cds-dk": "^9",
     "express": "^4"
   },
-  "devDependencies": {},
   "scripts": {
     "start": "cds-serve",
     "dev": "cds watch",
@@ -25,9 +25,6 @@
     "requires": {
       "db": {
         "kind": "sqlite",
-        "credentials": {
-          "database": "db.sqlite"
-        },
         "[production]": {
           "kind": "hana-cloud"
         }
