@@ -29,9 +29,8 @@
         "kind": "sqlite",
         "[production]": {
           "kind": "sqlite",
-          "deploy": true,
           "credentials": {
-            "url": ":memory:"
+            "url": "db.sqlite"
           }
         }
       },

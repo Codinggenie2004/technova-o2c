@@ -112,6 +112,7 @@ function generateInvoice(idx) {
     '<style>' + css + '</style>' +
     '</head><body>' + body + '</body></html>';
 
-  var blob = new Blob([html], { type: 'text/html' });
-  window.open(URL.createObjectURL(blob), '_blank');
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
 }
