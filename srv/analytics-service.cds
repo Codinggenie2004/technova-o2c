@@ -10,7 +10,7 @@ service AnalyticsService {
     // ─── Order KPIs ────────────────────────────────────────────────────────
     @readonly
     entity OrderKPIs as select from db.SalesOrders {
-        status,
+        key status,
         count(*) as orderCount : Integer,
         sum(orderValue)        as totalValue : Decimal(15,2),
         avg(orderValue)        as avgValue   : Decimal(15,2)
@@ -19,7 +19,7 @@ service AnalyticsService {
     // ─── Credit Block Summary ───────────────────────────────────────────────
     @readonly
     entity CreditBlockSummary as select from db.CreditBlockLog {
-        status,
+        key status,
         count(*)          as blockCount   : Integer,
         sum(exceededBy)   as totalExceeded : Decimal(15,2),
         avg(exceededBy)   as avgExceeded   : Decimal(15,2)
@@ -28,8 +28,8 @@ service AnalyticsService {
     // ─── Dunning Summary ────────────────────────────────────────────────────
     @readonly
     entity DunningSummary as select from db.Payments {
-        dunningLevel,
-        paymentStatus,
+        key dunningLevel,
+        key paymentStatus,
         count(*)              as count          : Integer,
         sum(outstandingAmt)   as totalOutstanding : Decimal(15,2)
     } group by dunningLevel, paymentStatus;
@@ -37,7 +37,7 @@ service AnalyticsService {
     // ─── Customer Risk View ─────────────────────────────────────────────────
     @readonly
     entity CustomerRisk as select from db.Customers {
-        customerId,
+        key customerId,
         customerName,
         city,
         creditLimit,
@@ -50,7 +50,7 @@ service AnalyticsService {
     // ─── Overdue AR Aging ───────────────────────────────────────────────────
     @readonly
     entity ARAgingReport as select from db.Payments {
-        invoiceNumber,
+        key invoiceNumber,
         customer.customerName as customerName,
         invoiceDate,
         dueDate,

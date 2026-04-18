@@ -12,7 +12,9 @@
     "@cap-js/sqlite": "^2.2.0",
     "@sap/cds": "^9",
     "@sap/cds-dk": "^9",
-    "express": "^4"
+    "@sap/xssec": "^4.13.0",
+    "express": "^4",
+    "passport": "^0.7.0"
   },
   "scripts": {
     "start": "cds-serve",
@@ -26,13 +28,17 @@
       "db": {
         "kind": "sqlite",
         "[production]": {
-          "kind": "hana-cloud"
+          "kind": "sqlite",
+          "deploy": true,
+          "credentials": {
+            "url": ":memory:"
+          }
         }
       },
       "auth": {
         "kind": "mocked",
         "[production]": {
-          "kind": "xsuaa"
+          "kind": "mocked"
         }
       }
     },
