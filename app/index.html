@@ -618,7 +618,7 @@ async function loadPage(p) {
         <td>${INR(o.customerCreditLimit)}</td>
         <td>${statusTag(o.status)}</td>
         <td>${(o.status==='CONFIRMED'||o.status==='DELIVERED')
-          ? '<button class="btn-invoice" onclick="generateInvoice('+i+')">📄 Invoice</button>'
+          ? '<button class="btn-invoice" onclick="generateInvoice('+i+')">&#128196; Invoice</button>'
           : '&mdash;'}</td>
       </tr>`).join('') : '<tr><td colspan="7" style="color:var(--muted);padding:20px;text-align:center">No orders yet &mdash; click + New Order to create one</td></tr>';
   }
