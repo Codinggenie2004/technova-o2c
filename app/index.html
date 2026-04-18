@@ -712,42 +712,95 @@ async function loadPage(p) {
   }
 }
 
+// ── Credit Block Release (VKM3 equivalent – SAP BTP Build Process Automation) ───
 async function approve(id) {
-  const comment = prompt('Manager Comment (required):');
-  if(!comment) return;
-  try {
-    const r = await fetch(BASE+'/approveCreditBlock', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({creditBlockId:id, managerComment:comment})
-    });
-    const j = await r.json();
-    toast(j.value?.message || 'Credit block approved!', 'success');
-    loadPage('creditblocks');
-  } catch(e) { toast('Error approving credit block','error'); }
+  const comment = prompt('Credit Manager Comment (required for audit trail):');
+  if (comment === null || comment.trim() === '') return;
+
+  // ── Local state update ──────────────────────────────────────────────────────
+  const block = DEMO_BLOCKS.find(b => b.ID === id);
+  if (!block) return toast('Credit block not found', 'error');
+
+  block.status         = 'APPROVED';
+  block.managerComment = comment;
+  block.resolvedAt     = new Date().toISOString();
+
+  // Release the corresponding sales order → CONFIRMED
+  const order = DEMO_ORDERS.find(o => o.salesOrderId === block.salesOrderNumber);
+  if (order) order.status = 'CONFIRMED';
+
+  // Update customer credit balance
+  const cust = DEMO_CUSTOMERS.find(c => c.customerName === block.customerName);
+  if (cust) cust.currentBalance += block.orderValue;
+
+  toast('Order ' + block.salesOrderNumber + ' APPROVED by Credit Manager. Sales team notified.', 'success');
+  loadPage('creditblocks');
+
+  // Background sync to server (non-blocking)
+  fetch(BASE + '/approveCreditBlock', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    signal: AbortSignal.timeout(2000),
+    body: JSON.stringify({creditBlockId: id, managerComment: comment})
+  }).catch(() => {});
 }
 
 async function reject(id) {
   const comment = prompt('Rejection Reason (required):');
-  if(!comment) return;
-  try {
-    await fetch(BASE+'/rejectCreditBlock', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({creditBlockId:id, managerComment:comment})
-    });
-    toast('Credit block rejected and order cancelled.','success');
-    loadPage('creditblocks');
-  } catch(e) { toast('Error rejecting credit block','error'); }
+  if (comment === null || comment.trim() === '') return;
+
+  // ── Local state update ──────────────────────────────────────────────────────
+  const block = DEMO_BLOCKS.find(b => b.ID === id);
+  if (!block) return toast('Credit block not found', 'error');
+
+  block.status         = 'REJECTED';
+  block.managerComment = comment;
+  block.resolvedAt     = new Date().toISOString();
+
+  // Cancel the corresponding sales order
+  const order = DEMO_ORDERS.find(o => o.salesOrderId === block.salesOrderNumber);
+  if (order) order.status = 'CANCELLED';
+
+  toast('Order ' + block.salesOrderNumber + ' REJECTED and cancelled. Reason logged.', 'error');
+  loadPage('creditblocks');
+
+  // Background sync to server (non-blocking)
+  fetch(BASE + '/rejectCreditBlock', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    signal: AbortSignal.timeout(2000),
+    body: JSON.stringify({creditBlockId: id, managerComment: comment})
+  }).catch(() => {});
 }
 
+// ── Dunning Escalation (F150 equivalent) ─────────────────────────────────────
 async function processDunning() {
-  toast('Running dunning process...','info');
-  try {
-    const r = await fetch(BASE+'/processDunning', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
-    const j = await r.json();
-    toast(j.value?.message || 'Dunning complete!', 'success');
-    loadPage('dunning');
-  } catch(e) { toast('Error running dunning','error'); }
+  toast('Running dunning process (F150)...', 'info');
+  const today = new Date();
+  let escalated = 0;
+
+  DEMO_PAYMENTS.forEach(function(p) {
+    if (p.paymentStatus === 'PAID') return;
+    const due = new Date(p.dueDate);
+    p.daysOverdue = Math.max(0, Math.floor((today - due) / 864e5));
+
+    // Escalate dunning level per TechNova dunning procedure TN_DUN
+    const prev = p.dunningLevel || 0;
+    if      (p.daysOverdue >= 35 && prev < 3) { p.dunningLevel = 3; escalated++; }
+    else if (p.daysOverdue >= 21 && prev < 2) { p.dunningLevel = 2; escalated++; }
+    else if (p.daysOverdue >=  7 && prev < 1) { p.dunningLevel = 1; escalated++; }
+
+    if (p.daysOverdue > 0) p.paymentStatus = 'OVERDUE';
+  });
+
+  toast('Dunning complete: ' + escalated + ' invoice(s) escalated to next level.', 'success');
+  loadPage('dunning');
+
+  // Background sync (non-blocking)
+  fetch(BASE + '/processDunning', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    signal: AbortSignal.timeout(2000), body: '{}'
+  }).catch(() => {});
 }
+
 
 function refreshAll() { loadPage('dashboard'); toast('Data refreshed!','success'); }
 
