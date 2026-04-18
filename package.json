@@ -41,6 +41,14 @@
     },
     "features": {
       "fetch_csrf": true
+    },
+    "server": {
+      "cors": [
+        {
+          "origin": true,
+          "credentials": true
+        }
+      ]
     }
   }
 }
