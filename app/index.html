@@ -521,8 +521,8 @@ async function apiFetch(path, fallback) {
   } catch(e) { return fallback; }
 }
 
-const INR = v => '&#8377;' + Number(v||0).toLocaleString('en-IN');
-const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '&mdash;';
+const INR = v => '₹' + Number(v||0).toLocaleString('en-IN');
+const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '—';
 
 function toast(msg, type='success') {
   const t = document.getElementById('toast');
