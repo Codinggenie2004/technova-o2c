@@ -1,0 +1,6 @@
+ID,customerId,customerName,email,phone,address,city,country,creditLimit,currentBalance,creditStatus
+c1000001-0000-0000-0000-000000000001,CUST-001,Reliance Infra Ltd,accounts@relianceinfra.com,+91-9876543210,"Plot 12, MIDC Industrial Area",Mumbai,India,5000000,3800000,ACTIVE
+c1000001-0000-0000-0000-000000000002,CUST-002,Tata Steel Ltd,finance@tatasteel.com,+91-9876543211,"Bombay House, Hutatma Chowk",Mumbai,India,10000000,4200000,ACTIVE
+c1000001-0000-0000-0000-000000000003,CUST-003,Infosys Technologies,ap@infosys.com,+91-9876543212,"Electronics City Phase 1",Bengaluru,India,7500000,7200000,ACTIVE
+c1000001-0000-0000-0000-000000000004,CUST-004,Wipro Limited,accounts@wipro.com,+91-9876543213,"Sarjapur Road",Bengaluru,India,6000000,1500000,ACTIVE
+c1000001-0000-0000-0000-000000000005,CUST-005,HCL Technologies,finance@hcl.com,+91-9876543214,"Sector 126, Noida",Delhi,India,8000000,6900000,BLOCKED
