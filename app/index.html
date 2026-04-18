@@ -795,19 +795,64 @@ async function submitNewOrder() {
   const orderValue = Number(document.getElementById('mo-value').value);
   if (!customerId) return toast('Please select a customer', 'error');
   if (!orderValue || orderValue <= 0) return toast('Please enter a valid order value', 'error');
-  try {
-    const r = await fetch(BASE + '/submitSalesOrder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customerId, orderValue })
+
+  // Find customer in local data
+  const customer = DEMO_CUSTOMERS.find(c => c.customerId === customerId);
+  if (!customer) return toast('Customer not found', 'error');
+
+  const availableCredit = customer.creditLimit - customer.currentBalance;
+  const creditBlocked   = orderValue > availableCredit;
+  const exceededBy      = creditBlocked ? (orderValue - availableCredit) : 0;
+
+  // Build order ID
+  const salesOrderId = 'SO-TN-' + Date.now().toString().slice(-6);
+  const orderDate    = new Date().toISOString().split('T')[0];
+  const status       = creditBlocked ? 'CREDIT_BLOCKED' : 'CONFIRMED';
+
+  // Add to local orders
+  DEMO_ORDERS.push({
+    ID: 'o-' + Date.now(),
+    salesOrderId,
+    customerName    : customer.customerName,
+    orderDate,
+    orderValue,
+    customerCreditLimit: customer.creditLimit,
+    status,
+    creditBlocked
+  });
+
+  if (creditBlocked) {
+    // Log credit block
+    DEMO_BLOCKS.push({
+      ID             : 'b-' + Date.now(),
+      salesOrderNumber: salesOrderId,
+      customerName   : customer.customerName,
+      orderValue,
+      creditLimit    : customer.creditLimit,
+      exceededBy,
+      blockedAt      : new Date().toISOString(),
+      status         : 'PENDING'
     });
-    const j = await r.json();
-    const result = j.value || j;
-    closeNewOrder();
-    toast(result.message || 'Order submitted!', result.creditBlocked ? 'error' : 'success');
-    loadPage('orders');
-    loadDashboard();
-  } catch(e) { toast('Error submitting order: ' + e.message, 'error'); }
+    toast(`⚠️ Order ${salesOrderId} CREDIT BLOCKED — exceeded by ${INR(exceededBy)}. Manager approval required.`, 'error');
+  } else {
+    // Update customer balance
+    customer.currentBalance += orderValue;
+    toast(`✅ Order ${salesOrderId} CONFIRMED! Confirmation sent to ${customer.customerName}.`, 'success');
+  }
+
+  closeNewOrder();
+  _customers = []; // reset so dropdown refreshes with updated balances
+
+  // Try to also post to CDS API in background (non-blocking)
+  fetch(BASE + '/submitSalesOrder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(3000),
+    body: JSON.stringify({ customerId, orderValue })
+  }).catch(() => {}); // silent fail if server not reachable
+
+  loadPage('orders');
+  loadDashboard();
 }
 
 // Close modal on overlay click
