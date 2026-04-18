@@ -490,8 +490,8 @@
 </div>
 
 <script>
-// CDS serves both the UI and API on the same port — relative URL always works
-const BASE = '/api/o2c';
+// API always runs on CDS server port 4004 (CORS enabled)
+const BASE = 'http://localhost:4004/api/o2c';
 const INR = v => '₹' + Number(v||0).toLocaleString('en-IN');
 const fmt = s => s ? new Date(s).toLocaleDateString('en-IN') : '—';
 

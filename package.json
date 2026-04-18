@@ -40,7 +40,7 @@
       "fetch_csrf": true
     },
     "server": {
-      "port": 5500,
+      "port": 4004,
       "cors": [
         {
           "origin": true,
