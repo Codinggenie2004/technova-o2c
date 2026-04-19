@@ -1,4 +1,4 @@
-using { innovacorp.o2c as db } from '../db/schema';
+using { InnovaCorp.o2c as db } from '../db/schema';
 
 /**
  * Analytics Service — O2C KPI Aggregations
