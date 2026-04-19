@@ -1,5 +1,5 @@
 /**
- * TechNova O2C — Notification Service
+ * InnovaCorp O2C — Notification Service
  * Handles email notifications for:
  *  1. Order Confirmation
  *  2. Credit Block Alert
@@ -17,7 +17,7 @@ class NotificationService {
      * Send Order Confirmation notification
      */
     static async sendOrderConfirmation({ salesOrderId, customerName, orderValue, deliveryDate }) {
-        const subject = `Order Confirmation — ${salesOrderId} | TechNova Solutions`;
+        const subject = `Order Confirmation — ${salesOrderId} | InnovaCorp Solutions`;
         const body = `
 Dear ${customerName},
 
@@ -34,10 +34,10 @@ Thank you for your order! Your sales order has been confirmed.
 Your order is now being processed. You will receive a shipping 
 notification once the order is dispatched.
 
-For queries, contact: orders@technova-solutions.com
+For queries, contact: orders@InnovaCorp-solutions.com
 
 Regards,
-TechNova Solutions Pvt. Ltd.
+InnovaCorp Solutions Pvt. Ltd.
 Order Management Team
 `;
         return NotificationService._send({
@@ -78,10 +78,10 @@ Please review in the SAP Build Process Automation inbox:
 https://dedb24a4trial.ap21.build.cloud.sap/myinbox
 
 Regards,
-TechNova O2C Automation System
+InnovaCorp O2C Automation System
 `;
         return NotificationService._send({
-            to: 'credit.manager@technova-solutions.com',
+            to: 'credit.manager@InnovaCorp-solutions.com',
             type: 'CREDIT_BLOCK',
             subject,
             body,
@@ -101,7 +101,7 @@ TechNova O2C Automation System
 
         const urgency = dunningLevel >= 3 ? '🚨 URGENT: ' : dunningLevel === 2 ? '⚠️ ' : '';
 
-        const subject = `${urgency}${levelText} — Invoice ${invoiceNumber} | TechNova Solutions`;
+        const subject = `${urgency}${levelText} — Invoice ${invoiceNumber} | InnovaCorp Solutions`;
         const body = `
 Dear ${customerName},
 
@@ -122,13 +122,13 @@ ${dunningLevel === 1
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Please arrange payment immediately to:
-  Bank: HDFC Bank | TechNova Solutions Pvt. Ltd.
+  Bank: HDFC Bank | InnovaCorp Solutions Pvt. Ltd.
   Account: 50100123456789 | IFSC: HDFC0001234
 
 ${dunningLevel >= 3 ? 'Failure to respond within 7 days will result in referral to our legal team.' : ''}
 
 Regards,
-TechNova Solutions Pvt. Ltd.
+InnovaCorp Solutions Pvt. Ltd.
 Accounts Receivable Team
 `;
         return NotificationService._send({
@@ -168,7 +168,7 @@ Accounts Receivable Team
         try {
             const db = await cds.connect.to('db');
             await db.run(
-                INSERT.into('technova.o2c.NotificationLog').entries({
+                INSERT.into('InnovaCorp.o2c.NotificationLog').entries({
                     notificationType : type,
                     recipient        : to,
                     subject,

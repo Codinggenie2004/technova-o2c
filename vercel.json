@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "technova-o2c-dashboard",
+  "name": "InnovaCorp-o2c-dashboard",
   "builds": [
     { "src": "app/**/*", "use": "@vercel/static" }
   ],

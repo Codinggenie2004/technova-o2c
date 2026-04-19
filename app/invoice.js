@@ -1,4 +1,4 @@
-// TechNova O2C - Invoice Generator
+// InnovaCorp O2C - Invoice Generator
 // Loaded as external script to avoid HTML parser interference with JS strings
 
 function generateInvoice(idx) {
@@ -47,12 +47,12 @@ function generateInvoice(idx) {
 
   var body = '<div class="hdr">' +
     '<div>' +
-      '<div class="brand">TechNova Solutions' +
+      '<div class="brand">InnovaCorp Solutions' +
         '<small>GSTIN: 27AABCT1332L1ZP &nbsp;|&nbsp; PAN: AABCT1332L</small>' +
       '</div>' +
       '<p style="font-size:12px;color:#666;margin-top:4px">' +
         'Plot 42, MIDC Phase II, Pune, Maharashtra - 411018<br>' +
-        'orders@technova-solutions.com &nbsp;|&nbsp; +91-20-66789900' +
+        'orders@InnovaCorp-solutions.com &nbsp;|&nbsp; +91-20-66789900' +
       '</p>' +
     '</div>' +
     '<div><h1>INVOICE</h1>' +

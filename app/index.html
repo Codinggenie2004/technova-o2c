@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TechNova O2C Dashboard | SAP BTP</title>
+  <title>InnovaCorp O2C Dashboard | SAP BTP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -198,7 +198,7 @@
     <div class="logo">
       <div class="logo-icon">TN</div>
       <div>
-        <div class="logo-text">TechNova O2C</div>
+        <div class="logo-text">InnovaCorp O2C</div>
         <div class="logo-sub">SAP BTP Platform</div>
       </div>
     </div>
@@ -965,7 +965,7 @@ async function processDunning() {
     const due = new Date(p.dueDate);
     p.daysOverdue = Math.max(0, Math.floor((today - due) / 864e5));
 
-    // Escalate dunning level per TechNova dunning procedure TN_DUN
+    // Escalate dunning level per InnovaCorp dunning procedure TN_DUN
     const prev = p.dunningLevel || 0;
     if      (p.daysOverdue >= 35 && prev < 3) { p.dunningLevel = 3; escalated++; }
     else if (p.daysOverdue >= 21 && prev < 2) { p.dunningLevel = 2; escalated++; }
@@ -1152,12 +1152,12 @@ function generateInvoice(idx) {
 
   var body = '<div class="hdr">' +
     '<div>' +
-      '<div class="brand">TechNova Solutions' +
+      '<div class="brand">InnovaCorp Solutions' +
         '<small>GSTIN: 27AABCT1332L1ZP &nbsp;|&nbsp; PAN: AABCT1332L</small>' +
       '</div>' +
       '<p style="font-size:12px;color:#666;margin-top:4px">' +
         'Plot 42, MIDC Phase II, Pune, Maharashtra - 411018<br>' +
-        'orders@technova-solutions.com &nbsp;|&nbsp; +91-20-66789900' +
+        'orders@InnovaCorp-solutions.com &nbsp;|&nbsp; +91-20-66789900' +
       '</p>' +
     '</div>' +
     '<div><h1>INVOICE</h1>' +

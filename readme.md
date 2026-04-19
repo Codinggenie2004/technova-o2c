@@ -1,4 +1,4 @@
-# TechNova O2C — SAP BTP Project
+# InnovaCorp O2C — SAP BTP Project
 
 <div align="center">
 
@@ -7,7 +7,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 
-**End-to-End Order-to-Cash (O2C) Process Automation for TechNova Solutions Pvt. Ltd.**
+**End-to-End Order-to-Cash (O2C) Process Automation for InnovaCorp Solutions Pvt. Ltd.**
 
 </div>
 
@@ -15,7 +15,7 @@
 
 ## 📋 Project Overview
 
-This project implements the **Order-to-Cash (O2C)** business process for TechNova Solutions using **SAP Business Technology Platform (BTP)**. It covers:
+This project implements the **Order-to-Cash (O2C)** business process for InnovaCorp Solutions using **SAP Business Technology Platform (BTP)**. It covers:
 
 - 🔒 **Credit Block Release Workflow** — Automated approval when sales orders exceed credit limits
 - 📦 **Sales Order Management** — Create and track sales orders with real-time credit checks
@@ -48,14 +48,14 @@ This project implements the **Order-to-Cash (O2C)** business process for TechNov
 ## 📁 Project Structure
 
 ```
-technova-o2c/
+InnovaCorp-o2c/
 ├── db/
 │   ├── schema.cds              ← Data models (Customers, Orders, Payments)
 │   └── data/
-│       ├── technova.o2c-Customers.csv
-│       ├── technova.o2c-SalesOrders.csv
-│       ├── technova.o2c-CreditBlockLog.csv
-│       └── technova.o2c-Payments.csv
+│       ├── InnovaCorp.o2c-Customers.csv
+│       ├── InnovaCorp.o2c-SalesOrders.csv
+│       ├── InnovaCorp.o2c-CreditBlockLog.csv
+│       └── InnovaCorp.o2c-Payments.csv
 ├── srv/
 │   ├── o2c-service.cds         ← Service definitions & OData APIs
 │   └── o2c-service.js          ← Business logic (credit check, dunning)
@@ -78,8 +78,8 @@ technova-o2c/
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/technova-o2c.git
-cd technova-o2c
+git clone https://github.com/YOUR_USERNAME/InnovaCorp-o2c.git
+cd InnovaCorp-o2c
 
 # Install dependencies
 npm install
@@ -152,7 +152,7 @@ mbt build
 cf login -a https://api.cf.ap21.hana.ondemand.com
 
 # Deploy
-cf deploy mta_archives/technova-o2c_1.0.0.mtar
+cf deploy mta_archives/InnovaCorp-o2c_1.0.0.mtar
 ```
 
 ---
@@ -168,4 +168,4 @@ SAP BTP Trial: `dedb24a4trial`
 
 ## 📄 License
 
-This project is for academic purposes — TechNova Solutions O2C Implementation.
+This project is for academic purposes — InnovaCorp Solutions O2C Implementation.

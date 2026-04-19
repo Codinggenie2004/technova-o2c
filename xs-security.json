@@ -1,7 +1,7 @@
 {
-  "xsappname": "technova-o2c",
+  "xsappname": "InnovaCorp-o2c",
   "tenant-mode": "dedicated",
-  "description": "TechNova O2C Security Config",
+  "description": "InnovaCorp O2C Security Config",
   "scopes": [
     {
       "name": "$XSAPPNAME.admin",

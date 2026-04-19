@@ -1,4 +1,4 @@
-namespace technova.o2c;
+namespace InnovaCorp.o2c;
 
 using { cuid, managed, Currency } from '@sap/cds/common';
 

@@ -1,12 +1,12 @@
 _schema-version: "3.1"
-ID: technova-o2c
+ID: InnovaCorp-o2c
 version: 1.0.0
-description: TechNova Solutions Order-to-Cash Process on SAP BTP
+description: InnovaCorp Solutions Order-to-Cash Process on SAP BTP
 
 modules:
 
   # ─── CAP Backend ────────────────────────────────────────────────────────────
-  - name: technova-o2c-srv
+  - name: InnovaCorp-o2c-srv
     type: nodejs
     path: gen/srv
     parameters:

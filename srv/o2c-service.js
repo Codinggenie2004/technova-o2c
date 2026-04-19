@@ -222,7 +222,7 @@ module.exports = class O2CService extends cds.ApplicationService {
                 'Authorization' : `Bearer ${token}`
             },
             body: JSON.stringify({
-                definitionId : 'technovacreditblockrelease',
+                definitionId : 'innovacorpcreditblockrelease',
                 context      : { salesOrderNumber, customerName, orderValue, creditLimit, exceededBy }
             })
         });
